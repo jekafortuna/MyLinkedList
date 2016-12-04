@@ -1,229 +1,63 @@
 package ua.kpi.linkedList;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Created by Evgeniy on 26.11.2016.
  */
-public class MyLinkedList<T> implements Iterable<T>, Queue<T>{
+public class MyLinkedList<E> extends AbstractList<E> implements List<E>, Deque<E>{
 
-    private Node<T> first;
-    private Node<T> last;
-    private int modificationCount = 0;
     private int size;
+    private Node<E> first;
+    private Node<E> last;
+    private int modificationCount = 0;
 
-    private class Node<T> {
+    public MyLinkedList() {}
 
-        private T value;
-        private Node next;
-        private Node previous;
-
-        public Node() {
-        }
-
-        public Node(T value) {
-            this.value = value;
-        }
-    }
-
-    public boolean checkIndex(int index) {
-        if (index > 0 || index <= size()){
-            return true;
-        }
-        throw new IllegalArgumentException("Invalid value of index. Should be from range [ 0 ; " + size + "] ");
-    }
-
-    public T getFirst() {
-        return (T) first.value;
-    }
-
-    public T getLast() {
-        return (T) last.value;
-    }
-
-    public void addFirst(T element) {
-
-        if (first == null) {
-            first = new Node(element);
-            last = first;
-            size++;
-            modificationCount++;
-            return;
-        }
-        Node node = new Node(element);
-        first.previous = node;
-        node.next = first;
-        first = node;
-        size++;
-        modificationCount++;
-    }
-
-    @Override
-    public boolean add(T element) {
-
-        if (first == null) {
-            first = new Node(element);
-            last = first;
-            size++;
-            modificationCount++;
-            return true;
-        }
-        Node temp = first;
-        while (temp.next != null) {
-            temp = temp.next;
-        }
-        temp.next = new Node(element);
-        last = temp.next;
-        last.previous = temp;
-        size++;
-        modificationCount++;
-        return true;
-    }
-
-    public void add(int index, T element) {
-
-        if (index < 0 || index > size) {
-            throw new IllegalArgumentException();
-        }
-        else if (index == 0) {
-            addFirst(element);
-            return;
-        }
-        else if (index == size) {
-            add(element);
-            return;
-        }
-        modificationCount++;
-        Node temp = getNode(index - 1);
-        Node node = new Node(element);
-        temp.next.previous = node;
-        node.next = temp.next;
-        node.previous = temp;
-        temp.next = node;
-        size++;
-    }
-
-    public T get(int index) {
-
-        if (index < 0 || index > size) {
-            throw new IllegalArgumentException();
-        }
-        Node temp = getNode(index);
-        return (T) temp.value;
-    }
-
-    public void set(int index, T value) {
-
-        if (index < 0 || index > size) {
-            throw new IllegalArgumentException();
-        }
-        modificationCount++;
-        Node temp = getNode(index);
-        temp.value = value;
-    }
-
-    private Node getNode(int index) {
-
-        int i;
-        Node temp;
-        if (index < size / 2) {
-            i = 0;
-            temp = first;
-            while (i != index) {
-                temp = temp.next;
-                i++;
-            }
-        } else {
-            i = size - 1;
-            temp = last;
-            while (i != index) {
-                temp = temp.previous;
-                i--;
-            }
-        }
-        return temp;
-    }
-
-    public T removeByIndex(int index){
-
-        checkIndex(index);
-        Node<T> current;
-        T removedValue;
-
-        if(index < size()/2){
-            current = first;
-            for(int i = 1; i < index; i++){
-                current = current.next;
-            }
-        }else{
-            current = last;
-            for(int i = size-2; i > index; i--){
-                current = current.previous;
-            }
-        }
-
-        if (current.next != null){
-            current.next.previous = current.previous;
-        }
-        if (current.previous != null){
-            current.previous.next = current.next;
-        }
-
-        removedValue = (T) current.value;
-        return removedValue;
-    }
-
-    public T removeFirst() {
-
-        if (first == null && last == null) {
-            throw new UnsupportedOperationException();
-        } else if (first == last) {
-            size--;
-            Node temp = first;
-            first = last = null;
-            return (T) temp.value;
-        }
-        modificationCount++;
-        Node temp = first;
-        first = first.next;
-        first.previous = null;
-        size--;
-        return (T) temp.value;
-    }
-
-    public T removeLast() {
-
-        if (first == null && last == null) {
-            throw new UnsupportedOperationException();
-        } else if (last == first) {
-            size--;
-            Node temp = first;
-            first = last = null;
-            return (T) temp.value;
-        }
-        modificationCount++;
-        Node temp = last;
-        last = last.previous;
-        last.next = null;
-        size--;
-        return (T) temp.value;
+    public MyLinkedList(Collection<? extends E> collection) {
+        this();
+        addAll(collection);
     }
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return size == 0;
     }
 
     @Override
     public boolean contains(Object o) {
+        Node<E> current = first;
+        if(o == null) {
+            while (current != null) {
+                if(current.data == null) {
+                    return true;
+                }
+                current = current.next;
+            }
+        } else {
+            while (current != null) {
+                if (o.equals(current.data)) {
+                    return true;
+                }
+                current = current.next;
+            }
+        }
         return false;
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+        return new MyIterator();
+    }
+
+    @Override
+    public Iterator<E> descendingIterator() {
+        return null;
     }
 
     @Override
@@ -232,17 +66,151 @@ public class MyLinkedList<T> implements Iterable<T>, Queue<T>{
     }
 
     @Override
-    public <T1> T1[] toArray(T1[] a) {
+    public <T> T[] toArray(T[] a) {
         return null;
     }
 
-//    @Override
-//    public boolean add(T t) {
-//        return false;
-//    }
+    @Override
+    public void addFirst(E e) {
+        Node<E> newFirst = new Node<E>(e,null,first);
+
+        if(first != null){
+            first.previous = newFirst;
+        }
+        first = newFirst;
+        size++;
+        modificationCount++;
+    }
+
+    @Override
+    public void addLast(E e) {
+        add(e);
+    }
+
+    @Override
+    public boolean offerFirst(E e) {
+        modificationCount++;
+        return false;
+    }
+
+    @Override
+    public boolean offerLast(E e) {
+        add(e);
+        return true;
+    }
+
+    @Override
+    public E removeFirst() {
+        modificationCount++;
+        return null;
+    }
+
+    @Override
+    public E removeLast() {
+        modificationCount++;
+        return null;
+    }
+
+    @Override
+    public E pollFirst() {
+        modificationCount++;
+        return null;
+    }
+
+    @Override
+    public E pollLast() {
+        modificationCount++;
+        return null;
+    }
+
+    @Override
+    public E getFirst() {
+        return (E) first.data;
+    }
+
+    @Override
+    public E getLast() {
+        return (E) last.data;
+    }
+
+    @Override
+    public E peekFirst() {
+        return null;
+    }
+
+    @Override
+    public E peekLast() {
+        return null;
+    }
+
+    @Override
+    public boolean removeFirstOccurrence(Object o) {
+        modificationCount++;
+        return false;
+    }
+
+    @Override
+    public boolean removeLastOccurrence(Object o) {
+        modificationCount++;
+        return false;
+    }
+
+    @Override
+    public boolean add(E e) {
+        Node<E> current = new Node<E>(e);
+        if(this.isEmpty()) {
+            first = current;
+            last = current;
+        } else {
+            last.next =current;
+            current.previous = last;
+            last = current;
+        }
+        size++;
+        modificationCount++;
+        return true;
+    }
+
+    @Override
+    public boolean offer(E e) {
+        return false;
+    }
+
+    @Override
+    public E remove() {
+        modificationCount++;
+        return null;
+    }
+
+    @Override
+    public E poll() {
+        return null;
+    }
+
+    @Override
+    public E element() {
+        return null;
+    }
+
+    @Override
+    public E peek() {
+        return null;
+    }
+
+    @Override
+    public void push(E e) {
+        modificationCount++;
+    }
+
+    @Override
+    public E pop() {
+        modificationCount++;
+        return null;
+    }
 
     @Override
     public boolean remove(Object o) {
+        modificationCount++;
         return false;
     }
 
@@ -252,7 +220,14 @@ public class MyLinkedList<T> implements Iterable<T>, Queue<T>{
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> c) {
+    public boolean addAll(Collection<? extends E> c) {
+        Objects.requireNonNull(c);
+        c.stream().forEach(this::add);
+        return true;
+    }
+
+    @Override
+    public boolean addAll(int index, Collection<? extends E> c) {
         return false;
     }
 
@@ -272,32 +247,258 @@ public class MyLinkedList<T> implements Iterable<T>, Queue<T>{
     }
 
     @Override
-    public boolean offer(T t) {
-        return false;
+    public E get(int index) {
+        if( index >= 0 && index < size) {
+            if (!isEmpty()) {
+                Node<E> current = first;
+                for (int i = 0; i < index; i++) {
+                    current = current.next;
+                }
+                return current.data;
+            } else {
+                throw new NoSuchElementException();
+            }
+        } else {
+            throw new IndexOutOfBoundsException();
+        }
     }
 
     @Override
-    public T remove() {
-        return null;
+    public E set(int index, E element) {
+        Node<E> current = findNodeByIndex(index);
+        E prev = current.data;
+        current.data = element;
+        return prev;
+    }
+
+    private Node<E> findNodeByIndex(int index) {
+        if( index >= 0 && index < size) {
+            if (!isEmpty()) {
+                Node<E> current = first;
+                for (int i = 0; i < index; i++) {
+                    current = current.next;
+                }
+                return current;
+            } else {
+                throw new NoSuchElementException();
+            }
+        } else {
+            throw new IndexOutOfBoundsException();
+        }
     }
 
     @Override
-    public T poll() {
-        return null;
+    public void add(int index, E element) {
+        if(!isEmpty()){
+            if(index == size) {
+                add(element);
+            } else if(index == 0) {
+                addFirst(element);
+            } else {
+                Node<E> current = findNodeByIndex(index);
+                Node<E> newNode = new Node<E>
+                        (element, current.previous, current.next);
+                current.previous.next = newNode;
+                current.previous = newNode;
+                size++;
+            }
+        }
     }
 
     @Override
-    public T element() {
-        return null;
+    public E remove(int index) {
+        Node<E> current = findNodeByIndex(index);
+        return removeNode(current);
+    }
+
+    private E removeNode(Node<E> current) {
+        modificationCount++;
+        E element = current.data;
+
+        if (size == 1) {
+            first = last = null;
+            size--;
+            return element;
+        }
+
+        if (current == first) {
+            first = current.next;
+            first.previous = null;
+        } else if (current == last) {
+            last = current.previous;
+            last.next = null;
+        } else {
+            current.previous.next = current.next;
+            current.next.previous = current.previous;
+        }
+
+        size--;
+        return element;
     }
 
     @Override
-    public T peek() {
-        return null;
+    public int indexOf(Object o) {
+        int ind = 0;
+
+        Node<E> current = first;
+        while (current != null) {
+            if (o == null) {
+                if (current.data == null) {
+                    return ind;
+                }
+            } else {
+                if (o.equals(current.data)) {
+                    return ind;
+                }
+            }
+
+            current = current.next;
+            ind++;
+        }
+        return -1;
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public int lastIndexOf(Object o) {
+        return 0;
+    }
+
+    @Override
+    public ListIterator<E> listIterator() {
+        return new MyIterator();
+    }
+
+    @Override
+    public ListIterator<E> listIterator(int index) {
+        return new MyIterator(){
+            {
+                current = findNodeByIndex(index);
+                cursor = index;
+            }
+        };
+    }
+
+    @Override
+    public List<E> subList(int fromIndex, int toIndex) {
         return null;
+    }
+
+    private class Node<E> {
+        Node<E> previous;
+        E data;
+        Node<E> next;
+
+        public Node(E data) {
+            this.data = data;
+        }
+
+        public Node(E data,Node<E> previous, Node<E> next) {
+            this(data);
+            this.previous = previous;
+            this.next = next;
+        }
+    }
+
+    private class MyIterator implements ListIterator<E> {
+        int cursor = 0;
+        int iteratorModCount = modificationCount;
+        Node<E> current = first ;
+        Node<E> lastReturned = null;
+
+        @Override
+        public boolean hasNext() {
+            checkCoModification();
+            return current != null;
+        }
+
+        private void checkCoModification() {
+            if( iteratorModCount != modificationCount ){
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public E next() {
+            checkCoModification();
+            if(!hasNext()){
+                throw new NoSuchElementException();
+            }
+            lastReturned = current;
+            current = current.next;
+            cursor++;
+            return lastReturned.data;
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            checkCoModification();
+            if( cursor > 0 && size != 0 ){
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public E previous() {
+            checkCoModification();
+            if( ! hasPrevious()){
+                throw new NoSuchElementException();
+            }
+            cursor--;
+            if( current == null && lastReturned != null){
+                current = lastReturned;
+                return lastReturned.data;
+            }
+            lastReturned = current.previous;
+            current = current.previous;
+            return lastReturned.data;
+        }
+
+        @Override
+        public int nextIndex() {
+            return cursor;
+        }
+
+        @Override
+        public int previousIndex() {
+            return cursor -1;
+        }
+
+        @Override
+        public void remove() {
+            checkCoModification();
+            if( lastReturned == null ){
+                throw new IllegalArgumentException();
+            }
+            iteratorModCount++;
+            removeNode(lastReturned);
+            lastReturned = null;
+        }
+
+        @Override
+        public void set(E e) {
+            checkCoModification();
+            if( lastReturned == null ){
+                throw new NoSuchElementException();
+            }
+            modificationCount++;
+            iteratorModCount++;
+            lastReturned.data = e;
+        }
+
+        @Override
+        public void add(E e) {
+            checkCoModification();
+            iteratorModCount++;
+            if(current == null ){
+                add(e);
+            } else {
+                Node<E> temp = new Node<E>(e, current.previous, current);
+                if( current.previous != null ) {
+                    current.previous.next = temp;
+                }
+                current.previous = temp;
+            }
+        }
     }
 }
